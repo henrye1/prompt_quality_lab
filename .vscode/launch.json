@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Streamlit: Run app",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "streamlit",
+      "args": ["run", "${workspaceFolder}/streamlit_app.py"],
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Pytest: Current file",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v"],
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+[project]
+name = "prompt-quality-lab"
+version = "0.1.0"
+description = "Test prompt-optimisation frameworks against Anthropic Claude"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.32",
+    "anthropic>=0.40",
+    "langchain>=0.3",
+    "langchain-core>=0.3",
+    "langchain-anthropic>=0.3",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prompt_quality_lab"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

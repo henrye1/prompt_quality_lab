@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Env
+.env
+.env.local
+
+# VS Code (workspace settings kept; user settings ignored)
+.vscode/*.code-workspace
+
+# Claude Code local settings
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
