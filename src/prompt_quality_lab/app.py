@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
+import html as html_lib
 
 import streamlit as st
 from anthropic import Anthropic
@@ -15,8 +17,8 @@ from prompt_quality_lab.optimisers.prompt_improver import anthropic_prompt_impro
 from prompt_quality_lab.optimisers.variants import generate_variants
 
 
-def _sidebar() -> tuple[str, str, list]:
-    """Render the sidebar. Returns (api_key, model, uploaded_files)."""
+def _sidebar() -> tuple[str, str, list, list]:
+    """Render the sidebar. Returns (api_key, model, uploaded_files, few_shot_files)."""
     with st.sidebar:
         st.header("⚙️ Setup")
         env_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -33,9 +35,17 @@ def _sidebar() -> tuple[str, str, list]:
         st.divider()
         st.subheader("📂 Upload prompts")
         uploaded = st.file_uploader(
-            "CSV / JSON / .txt — multiple OK",
-            type=["csv", "json", "txt", "md"],
+            "CSV / JSON / .txt / .xlsx / .xlsm / .docx / .pdf — multiple OK",
+            type=["csv", "json", "txt", "md", "xlsx", "xls", "xlsm", "docx", "pdf"],
             accept_multiple_files=True,
+        )
+        st.divider()
+        st.subheader("📁 Upload few-shot example files (optional)")
+        few_shot = st.file_uploader(
+            "Upload files containing few-shot examples (these should include expected outputs)",
+            type=["csv", "json", "txt", "md", "xlsx", "xls", "xlsm", "docx", "pdf"],
+            accept_multiple_files=True,
+            help="These files will be used as labelled few-shot examples for the DSPy tab.",
         )
         st.divider()
         with st.expander("Input format hints"):
@@ -51,9 +61,15 @@ def _sidebar() -> tuple[str, str, list]:
 ```
 
 **.txt** — one prompt per file; filename becomes the ID.
+
+**Excel (.xls/.xlsx/.xlsm)** — sheets/tables with columns `id, prompt, expected_output` (or `prompt_text`).
+
+**Word (.docx)** — full document text will be treated as a single prompt.
+
+**PDF (.pdf)** — text will be extracted and treated as a single prompt.
 """
             )
-    return api_key, model, uploaded
+    return api_key, model, uploaded, few_shot
 
 
 def _tab_prompt_improver(client: Anthropic, prompts: list[dict], model: str) -> None:
@@ -79,6 +95,30 @@ def _tab_prompt_improver(client: Anthropic, prompts: list[dict], model: str) -> 
                     with st.spinner("Improving..."):
                         improved = anthropic_prompt_improver(client, p["prompt"], model)
                     st.code(improved, language="markdown")
+                    # Provide brief context for the improved prompt
+                    st.markdown(
+                        "**Context:** This improved prompt is a rewritten version that aims to clarify intent, remove ambiguity, and better structure the required output while preserving the original meaning."
+                    )
+                    # Build download content with metadata so the file can be used directly for testing
+                    timestamp = datetime.utcnow().isoformat() + "Z"
+                    download_text = (
+                        f"## Improved Prompt\n\n{improved}\n\n---\nOriginal prompt:\n{p['prompt']}\n\nModel: {model}\nTimestamp: {timestamp}\n"
+                    )
+                    st.download_button(
+                        "📥 Download improved prompt",
+                        data=download_text,
+                        file_name=f"{p['id']}_improved.txt",
+                        mime="text/plain",
+                        key=f"download_{p['id']}",
+                    )
+
+                    # Add a copy-to-clipboard button using a small HTML component
+                    escaped = html_lib.escape(improved)
+                    copy_html = f"""
+<button onclick="navigator.clipboard.writeText(document.getElementById('impr_{p['id']}').innerText)">Copy improved prompt</button>
+<pre id="impr_{p['id']}" style="display:none;">{escaped}</pre>
+"""
+                    st.components.v1.html(copy_html, height=40)
 
                 if also_score and p["expected_output"]:
                     with st.spinner("Scoring..."):
