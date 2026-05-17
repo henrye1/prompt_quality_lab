@@ -57,30 +57,33 @@ def render_detail() -> None:
             index=list(Source).index(rec.source),
         )
         notes = st.text_area("Notes", value=rec.notes)
-        confirm_save = st.checkbox("Confirm save")
-        submitted = st.form_submit_button("Save changes", disabled=not confirm_save)
+        confirm_save = st.checkbox("Confirm save (required before save takes effect)")
+        submitted = st.form_submit_button("Save changes")
 
         if submitted:
-            try:
-                years = [int(y.strip()) for y in afs_years_raw.split(",") if y.strip()]
-            except ValueError:
-                st.error("AFS years must be comma-separated integers.")
+            if not confirm_save:
+                st.error("Please tick 'Confirm save' before submitting.")
             else:
-                if isinstance(date_added, date):
-                    update_record(
-                        selected_id,
-                        company_name=company_name,
-                        asset_class=asset_class,
-                        sector=sector,
-                        afs_years=years,
-                        date_added=date_added,
-                        reviewer=reviewer,
-                        quality_grade=quality_grade,
-                        source=source,
-                        notes=notes,
-                    )
-                    st.success(f"Saved {selected_id}")
-                    st.rerun()
+                try:
+                    years = [int(y.strip()) for y in afs_years_raw.split(",") if y.strip()]
+                except ValueError:
+                    st.error("AFS years must be comma-separated integers.")
+                else:
+                    if isinstance(date_added, date):
+                        update_record(
+                            selected_id,
+                            company_name=company_name,
+                            asset_class=asset_class,
+                            sector=sector,
+                            afs_years=years,
+                            date_added=date_added,
+                            reviewer=reviewer,
+                            quality_grade=quality_grade,
+                            source=source,
+                            notes=notes,
+                        )
+                        st.success(f"Saved {selected_id}")
+                        st.rerun()
 
     st.divider()
     st.markdown("### Input files")
