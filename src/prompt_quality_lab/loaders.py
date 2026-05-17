@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from typing import BinaryIO
 
 try:
@@ -22,8 +23,17 @@ except Exception:
     PyPDF2 = None
 
 
-def _coerce_row(row: dict, fallback_id: str) -> dict:
-    """Normalise a record to {id, prompt, expected_output}."""
+def _make_record(prompt_id: str, prompt: str, expected_output: str, source: str) -> dict:
+    return {
+        "id": str(prompt_id),
+        "prompt": str(prompt),
+        "expected_output": str(expected_output),
+        "source": source,
+    }
+
+
+def _coerce_row(row: dict, fallback_id: str, source: str) -> dict:
+    """Normalise a record to {id, prompt, expected_output, source}."""
     pid = row.get("id") or row.get("prompt_id") or fallback_id
     text = (
         row.get("prompt")
@@ -38,7 +48,43 @@ def _coerce_row(row: dict, fallback_id: str) -> dict:
         or row.get("output")
         or ""
     )
-    return {"id": str(pid), "prompt": str(text), "expected_output": str(expected)}
+    return _make_record(pid, text, expected, source)
+
+
+def _split_blocks(text: str) -> list[str]:
+    return [block.strip() for block in re.split(r"\n\s*\n+", text.strip()) if block.strip()]
+
+
+def _parse_block(block: str, fallback_id: str, source: str) -> dict | None:
+    lines = [line.strip() for line in block.splitlines() if line.strip()]
+    if not lines:
+        return None
+
+    pid = fallback_id
+    expected_lines: list[str] = []
+    prompt_lines: list[str] = []
+    found_expected = False
+
+    for line in lines:
+        if re.match(r"^(?:id|prompt_id|prompt\s*id)\s*[:\-]", line, re.I):
+            pid = re.sub(r"^(?:id|prompt_id|prompt\s*id)\s*[:\-]\s*", "", line, flags=re.I).strip() or pid
+            continue
+        if re.match(r"^(?:expected_output|expected|output)\s*[:\-]", line, re.I):
+            found_expected = True
+            expected_lines.append(
+                re.sub(r"^(?:expected_output|expected|output)\s*[:\-]\s*", "", line, flags=re.I).strip()
+            )
+            continue
+        if found_expected:
+            expected_lines.append(line)
+        else:
+            prompt_lines.append(line)
+
+    prompt_text = "\n".join(prompt_lines).strip()
+    expected_text = "\n".join(expected_lines).strip()
+    if not prompt_text:
+        return None
+    return _make_record(pid, prompt_text, expected_text, source)
 
 
 def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
@@ -61,7 +107,7 @@ def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
         if name.endswith(".csv"):
             reader = csv.DictReader(io.StringIO(content))
             for i, row in enumerate(reader):
-                rec = _coerce_row(row, f"{f.name}#{i}")
+                rec = _coerce_row(row, f"{f.name}#{i}", f.name)
                 if rec["prompt"]:
                     prompts.append(rec)
 
@@ -74,23 +120,19 @@ def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
             if isinstance(data, list):
                 for i, item in enumerate(data):
                     if isinstance(item, dict):
-                        rec = _coerce_row(item, f"{f.name}#{i}")
+                        rec = _coerce_row(item, f"{f.name}#{i}", f.name)
                     else:
-                        rec = {
-                            "id": f"{f.name}#{i}",
-                            "prompt": str(item),
-                            "expected_output": "",
-                        }
+                        rec = _make_record(f"{f.name}#{i}", str(item), "", f.name)
                     if rec["prompt"]:
                         prompts.append(rec)
             elif isinstance(data, dict):
-                rec = _coerce_row(data, f.name)
+                rec = _coerce_row(data, f.name, f.name)
                 if rec["prompt"]:
                     prompts.append(rec)
 
         elif name.endswith((".txt", ".md")):
             prompts.append(
-                {"id": f.name, "prompt": content.strip(), "expected_output": ""}
+                _make_record(f.name, content.strip(), "", f.name)
             )
 
         elif name.endswith((".xls", ".xlsx", ".xlsm")):
@@ -113,7 +155,7 @@ def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
                 continue
             records = df.to_dict(orient="records")
             for i, row in enumerate(records):
-                rec = _coerce_row(row, f"{f.name}#{i}")
+                rec = _coerce_row(row, f"{f.name}#{i}", f.name)
                 if rec["prompt"]:
                     prompts.append(rec)
 
@@ -126,8 +168,14 @@ def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
             try:
                 doc = docx.Document(io.BytesIO(raw))
                 text = "\n\n".join(p.text for p in doc.paragraphs if p.text.strip())
-                if text.strip():
-                    prompts.append({"id": f.name, "prompt": text.strip(), "expected_output": ""})
+                blocks = _split_blocks(text)
+                if len(blocks) > 1:
+                    for i, block in enumerate(blocks):
+                        rec = _parse_block(block, f"{f.name}#{i}", f.name)
+                        if rec:
+                            prompts.append(rec)
+                elif text.strip():
+                    prompts.append(_make_record(f.name, text.strip(), "", f.name))
             except Exception as e:
                 warnings.append(f"Skipping {f.name}: could not read docx ({e})")
                 continue
@@ -145,8 +193,14 @@ def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
                     except Exception:
                         texts.append("")
                 full = "\n\n".join(t for t in texts if t.strip())
-                if full.strip():
-                    prompts.append({"id": f.name, "prompt": full.strip(), "expected_output": ""})
+                blocks = _split_blocks(full)
+                if len(blocks) > 1:
+                    for i, block in enumerate(blocks):
+                        rec = _parse_block(block, f"{f.name}#{i}", f.name)
+                        if rec:
+                            prompts.append(rec)
+                elif full.strip():
+                    prompts.append(_make_record(f.name, full.strip(), "", f.name))
             except Exception as e:
                 warnings.append(f"Skipping {f.name}: could not read PDF ({e})")
                 continue

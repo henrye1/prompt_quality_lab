@@ -35,6 +35,21 @@ The sidebar accepts multiple files. Auto-detected by extension:
 | **JSON** | list of `{"id": "...", "prompt": "...", "expected_output": "..."}` |
 | **.txt / .md** | one prompt per file; filename becomes the ID |
 
+The app also supports a specialised credit paper workflow:
+
+- **Credit paper input documents**: upload financial statements, credit reports, or related input files as text-based prompts or documents.
+- **Target style example documents**: upload example credit reports in PDF/DOCX/MD to capture the desired output style.
+
+## Extra file support
+
+To enable Excel, Word, and PDF uploads, install the optional dependencies:
+
+```powershell
+uv run pip install pandas openpyxl python-docx PyPDF2
+```
+
+If you are using `uv sync`, simply run it after updating requirements so the extra packages are installed.
+
 ## Project layout
 
 ```

@@ -8,6 +8,21 @@ import html as html_lib
 import streamlit as st
 from anthropic import Anthropic
 
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import docx
+except ImportError:
+    docx = None
+
+try:
+    import PyPDF2
+except ImportError:
+    PyPDF2 = None
+
 from prompt_quality_lab.anthropic_client import call_claude, evaluate_against_expected
 from prompt_quality_lab.config import AVAILABLE_MODELS
 from prompt_quality_lab.loaders import load_prompts
@@ -17,8 +32,8 @@ from prompt_quality_lab.optimisers.prompt_improver import anthropic_prompt_impro
 from prompt_quality_lab.optimisers.variants import generate_variants
 
 
-def _sidebar() -> tuple[str, str, list, list]:
-    """Render the sidebar. Returns (api_key, model, uploaded_files, few_shot_files)."""
+def _sidebar() -> tuple[str, str, list, list, list, list]:
+    """Render the sidebar. Returns (api_key, model, uploaded_files, input_docs, target_docs, few_shot_files)."""
     with st.sidebar:
         st.header("⚙️ Setup")
         env_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -40,13 +55,35 @@ def _sidebar() -> tuple[str, str, list, list]:
             accept_multiple_files=True,
         )
         st.divider()
-        st.subheader("📁 Upload few-shot example files (optional)")
+        st.subheader("� Upload credit paper input documents")
+        input_docs = st.file_uploader(
+            "Upload financials, reports, and other input documents for credit paper generation",
+            type=["csv", "json", "txt", "md", "xlsx", "xls", "xlsm", "docx", "pdf"],
+            accept_multiple_files=True,
+            help="These files are treated as the input source for the credit paper prompt.",
+        )
+        st.divider()
+        st.subheader("📥 Upload target style example documents")
+        target_docs = st.file_uploader(
+            "Upload example credit reports or target output documents to replicate",
+            type=["txt", "md", "docx", "pdf"],
+            accept_multiple_files=True,
+            help="These files are used to capture the desired reporting style and output format.",
+        )
+        st.divider()
+        st.subheader("�📁 Upload few-shot example files (optional)")
         few_shot = st.file_uploader(
             "Upload files containing few-shot examples (these should include expected outputs)",
             type=["csv", "json", "txt", "md", "xlsx", "xls", "xlsm", "docx", "pdf"],
             accept_multiple_files=True,
             help="These files will be used as labelled few-shot examples for the DSPy tab.",
         )
+        if pd is None or docx is None or PyPDF2 is None:
+            st.warning(
+                "PDF/Word/Excel uploads require extra libraries. Install:\n"
+                "`pip install pandas openpyxl python-docx PyPDF2` "
+                "or run `uv sync` to install all requirements."
+            )
         st.divider()
         with st.expander("Input format hints"):
             st.markdown(
@@ -64,12 +101,50 @@ def _sidebar() -> tuple[str, str, list, list]:
 
 **Excel (.xls/.xlsx/.xlsm)** — sheets/tables with columns `id, prompt, expected_output` (or `prompt_text`).
 
-**Word (.docx)** — full document text will be treated as a single prompt.
+**Word (.docx)** / **PDF (.pdf)** — text is split by blank lines. To load multiple prompts in one file, use sections like:
 
-**PDF (.pdf)** — text will be extracted and treated as a single prompt.
+```
+ID: example-1
+Prompt: Translate the following text to French.
+Expected: Traduire le texte suivant en français.
+
+ID: example-2
+Prompt: Summarise the article in two sentences.
+Expected: Résumer l'article en deux phrases.
+```
+
+If the file contains a single block, it will be loaded as a single prompt.
 """
             )
-    return api_key, model, uploaded, few_shot
+    return api_key, model, uploaded, input_docs, target_docs, few_shot
+
+
+def _load_target_style_examples(target_docs: list[dict]) -> list[dict]:
+    """Convert raw target documents into labelled style examples."""
+    examples = []
+    for d in target_docs:
+        text = d["prompt"].strip()
+        if not text:
+            continue
+        examples.append(
+            {
+                "id": d["id"],
+                "prompt": (
+                    "Generate a credit paper in the same style and structure as the example output below."
+                ),
+                "expected_output": text,
+                "source": d.get("source", "target-doc"),
+            }
+        )
+    return examples
+
+
+def _combine_input_documents(input_docs: list[dict]) -> str:
+    """Combine uploaded input documents into a single credit paper prompt."""
+    combined = []
+    for doc in input_docs:
+        combined.append(f"---\n{doc['id']}\n{doc['prompt'].strip()}")
+    return "\n\n".join(combined)
 
 
 def _tab_prompt_improver(client: Anthropic, prompts: list[dict], model: str) -> None:
@@ -135,6 +210,49 @@ def _tab_prompt_improver(client: Anthropic, prompts: list[dict], model: str) -> 
                         c3.metric("Δ", round(new_score - orig_score, 2))
 
 
+def _tab_credit_paper(
+    client: Anthropic,
+    input_docs: list[dict],
+    target_style_docs: list[dict],
+    model: str,
+) -> None:
+    st.subheader("Credit Paper Optimiser")
+    st.caption(
+        "Use your uploaded financial inputs and target report examples to generate a credit paper in the desired style."
+    )
+
+    if not input_docs:
+        st.warning(
+            "Upload credit paper input documents in the sidebar to use this tab."
+        )
+        return
+    if not target_style_docs:
+        st.warning(
+            "Upload target style example documents in the sidebar to use this tab."
+        )
+        return
+
+    if st.button("🚀 Generate credit paper", key="credit_run", type="primary"):
+        combined_input = _combine_input_documents(input_docs)
+        style_examples = _load_target_style_examples(target_style_docs)
+        augmented = dspy_style_bootstrap(combined_input, style_examples)
+        with st.spinner("Generating credit paper..."):
+            output = call_claude(client, augmented, model=model)
+
+        st.markdown("**Generated credit paper**")
+        st.code(output, language="markdown")
+
+        with st.expander("Input documents used"):
+            for doc in input_docs:
+                st.markdown(f"**{doc['id']}**")
+                st.code(doc["prompt"], language="markdown")
+
+        with st.expander("Target style examples used"):
+            for ex in style_examples:
+                st.markdown(f"**{ex['id']}** (source: {ex.get('source', 'target-doc')})")
+                st.code(ex["expected_output"], language="markdown")
+
+
 def _tab_dspy(client: Anthropic, prompts: list[dict], labelled: list[dict], model: str) -> None:
     st.subheader("Bootstrap few-shot examples (DSPy-style)")
     st.caption(
@@ -160,9 +278,11 @@ def _tab_dspy(client: Anthropic, prompts: list[dict], labelled: list[dict], mode
             augmented = dspy_style_bootstrap(target["prompt"], fs_pool)
 
             with st.expander(f"📝 {target['id']}", expanded=True):
+                sources = sorted({e.get("source", "unknown") for e in fs_pool})
                 st.markdown(
                     f"**Few-shot examples used:** {[e['id'] for e in fs_pool] or 'none'}"
                 )
+                st.markdown(f"**Example sources:** {sources}")
                 with st.spinner("Running baseline + few-shot..."):
                     baseline = call_claude(client, target["prompt"], model=model)
                     boosted = call_claude(client, augmented, model=model)
@@ -289,37 +409,116 @@ def main() -> None:
         "Test four prompt-optimisation strategies on your own prompts — powered by Anthropic Claude"
     )
 
-    api_key, model, uploaded = _sidebar()
+    api_key, model, uploaded, input_uploaded, target_uploaded, few_uploaded = _sidebar()
 
     if not api_key:
         st.warning("👈 Add your Anthropic API key in the sidebar to begin.")
         st.stop()
-    if not uploaded:
-        st.info("👈 Upload one or more prompt files in the sidebar.")
+    if not uploaded and not input_uploaded:
+        st.info(
+            "👈 Upload one or more prompt files or credit paper input documents in the sidebar."
+        )
         st.stop()
 
     client = Anthropic(api_key=api_key)
     prompts, warnings = load_prompts(uploaded)
     for w in warnings:
         st.warning(w)
-    if not prompts:
-        st.error("No prompts could be loaded. Check the file format hints in the sidebar.")
+
+    input_docs: list[dict] = []
+    if input_uploaded:
+        input_docs, input_warnings = load_prompts(input_uploaded)
+        for w in input_warnings:
+            st.warning(w)
+
+    target_docs: list[dict] = []
+    if target_uploaded:
+        target_docs, target_warnings = load_prompts(target_uploaded)
+        for w in target_warnings:
+            st.warning(w)
+
+    # Load any few-shot example files and merge their labelled prompts into the labelled pool
+    few_prompts: list[dict] = []
+    if few_uploaded:
+        fp, fw = load_prompts(few_uploaded)
+        few_prompts = fp
+        for w in fw:
+            st.warning(w)
+
+    if not prompts and not input_docs:
+        st.error("No prompts or input documents could be loaded. Check the file format hints in the sidebar.")
         st.stop()
 
     labelled = [p for p in prompts if p["expected_output"].strip()]
-    st.success(
-        f"Loaded **{len(prompts)}** prompt(s) — **{len(labelled)}** have expected outputs "
-        "(usable as eval data)."
-    )
-    with st.expander("👀 Preview loaded prompts"):
-        st.dataframe(prompts, use_container_width=True)
+    # Add few-shot prompts that include expected outputs (these are treated as labelled examples)
+    labelled_from_few = [p for p in few_prompts if p["expected_output"].strip()]
+    if labelled_from_few:
+        sources = sorted({p.get("source", "unknown") for p in labelled_from_few})
+        st.info(
+            f"Added {len(labelled_from_few)} few-shot example(s) from the separate upload: {sources}"
+        )
+        labelled.extend(labelled_from_few)
+    elif few_uploaded:
+        st.warning(
+            "No labelled few-shot prompts were loaded from the separate upload. "
+            "Check the preview below and make sure each example includes `expected_output`."
+        )
 
-    tab1, tab2, tab3, tab4 = st.tabs(
+    summary_parts = []
+    if prompts:
+        summary_parts.append(f"**{len(prompts)}** main prompt(s)")
+    if input_docs:
+        summary_parts.append(f"**{len(input_docs)}** input document(s)")
+    summary_parts.append(f"**{len(labelled)}** labelled prompt(s)")
+    st.success(
+        "Loaded " + " — ".join(summary_parts) + " (usable as eval data where applicable)."
+    )
+
+    if prompts:
+        with st.expander("👀 Preview loaded prompts"):
+            preview = [
+                {**p, "source": p.get("source", "uploaded")}
+                for p in prompts
+            ]
+            st.dataframe(preview, use_container_width=True)
+
+    if input_docs:
+        with st.expander("👀 Preview credit paper input documents"):
+            preview_inputs = [
+                {**p, "source": p.get("source", "input-doc")}
+                for p in input_docs
+            ]
+            st.dataframe(preview_inputs, use_container_width=True)
+
+    if target_docs:
+        with st.expander("👀 Preview target style documents"):
+            preview_targets = [
+                {**p, "source": p.get("source", "target-doc")}
+                for p in target_docs
+            ]
+            st.dataframe(preview_targets, use_container_width=True)
+
+    if few_uploaded:
+        with st.expander("👀 Preview uploaded few-shot examples"):
+            preview_few = [
+                {**p, "source": p.get("source", "few-shot upload")}
+                for p in few_prompts
+            ]
+            if preview_few:
+                st.dataframe(preview_few, use_container_width=True)
+            else:
+                st.info(
+                    "No prompts were extracted from the few-shot upload. "
+                    "See warning messages above for details."
+                )
+
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
             "🔧 Prompt Improver",
             "📊 DSPy-style Few-Shot",
             "⚖️ Variant Comparison",
             "🔗 LangChain + Evals",
+            "🧾 Credit Paper",
         ]
     )
     with tab1:
@@ -330,6 +529,8 @@ def main() -> None:
         _tab_variants(client, prompts, model)
     with tab4:
         _tab_langchain(client, prompts, api_key, model)
+    with tab5:
+        _tab_credit_paper(client, input_docs, target_docs, model)
 
 
 if __name__ == "__main__":

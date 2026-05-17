@@ -10,6 +10,10 @@ dependencies = [
     "langchain-core>=0.3",
     "langchain-anthropic>=0.3",
     "python-dotenv>=1.0",
+    "pandas>=2.0",
+    "openpyxl>=3.1",
+    "python-docx>=0.8",
+    "PyPDF2>=3.0",
 ]
 
 [dependency-groups]
