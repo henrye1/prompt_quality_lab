@@ -17,16 +17,17 @@ class FakeFile:
 
 def test_coerce_row_uses_alternate_keys():
     row = {"prompt_id": "p1", "text": "hello", "expected": "world"}
-    assert _coerce_row(row, "fallback") == {
+    assert _coerce_row(row, "fallback", "src.csv") == {
         "id": "p1",
         "prompt": "hello",
         "expected_output": "world",
+        "source": "src.csv",
     }
 
 
 def test_coerce_row_falls_back_when_id_missing():
     row = {"prompt": "x"}
-    assert _coerce_row(row, "fallback")["id"] == "fallback"
+    assert _coerce_row(row, "fallback", "src.csv")["id"] == "fallback"
 
 
 def test_load_prompts_csv():
@@ -34,8 +35,8 @@ def test_load_prompts_csv():
     prompts, warnings = load_prompts(files)
     assert warnings == []
     assert prompts == [
-        {"id": "p1", "prompt": "hello", "expected_output": "world"},
-        {"id": "p2", "prompt": "foo", "expected_output": "bar"},
+        {"id": "p1", "prompt": "hello", "expected_output": "world", "source": "data.csv"},
+        {"id": "p2", "prompt": "foo", "expected_output": "bar", "source": "data.csv"},
     ]
 
 
@@ -44,14 +45,23 @@ def test_load_prompts_json_list():
     files = [FakeFile("data.json", content)]
     prompts, warnings = load_prompts(files)
     assert warnings == []
-    assert prompts == [{"id": "p1", "prompt": "hello", "expected_output": "world"}]
+    assert prompts == [
+        {"id": "p1", "prompt": "hello", "expected_output": "world", "source": "data.json"}
+    ]
 
 
 def test_load_prompts_txt():
     files = [FakeFile("essay.txt", "  this is a prompt  ")]
     prompts, warnings = load_prompts(files)
     assert warnings == []
-    assert prompts == [{"id": "essay.txt", "prompt": "this is a prompt", "expected_output": ""}]
+    assert prompts == [
+        {
+            "id": "essay.txt",
+            "prompt": "this is a prompt",
+            "expected_output": "",
+            "source": "essay.txt",
+        }
+    ]
 
 
 def test_load_prompts_skips_empty_prompt_rows():

@@ -1226,7 +1226,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
-    { name = "credit-datasets" },
     { name = "langchain" },
     { name = "langchain-anthropic" },
     { name = "langchain-core" },
@@ -1238,6 +1237,11 @@ dependencies = [
     { name = "streamlit" },
 ]
 
+[package.optional-dependencies]
+dataset-manager = [
+    { name = "credit-datasets" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -1247,7 +1251,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
-    { name = "credit-datasets", editable = "../credit_datasets" },
+    { name = "credit-datasets", marker = "extra == 'dataset-manager'", editable = "../credit_datasets" },
     { name = "langchain", specifier = ">=0.3" },
     { name = "langchain-anthropic", specifier = ">=0.3" },
     { name = "langchain-core", specifier = ">=0.3" },
@@ -1258,6 +1262,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "streamlit", specifier = ">=1.32" },
 ]
+provides-extras = ["dataset-manager"]
 
 [package.metadata.requires-dev]
 dev = [

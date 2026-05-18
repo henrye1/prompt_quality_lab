@@ -14,8 +14,13 @@ dependencies = [
     "openpyxl>=3.1",
     "python-docx>=0.8",
     "PyPDF2>=3.0",
-    "credit-datasets",
 ]
+
+[project.optional-dependencies]
+# Powers the Dataset Manager page. Resolved locally via [tool.uv.sources] below.
+# Not installed by default so cloud deploys (Render, etc.) can `pip install -e .`
+# without needing the sibling ../credit_datasets directory.
+dataset-manager = ["credit-datasets"]
 
 [dependency-groups]
 dev = [
