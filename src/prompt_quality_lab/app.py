@@ -1,9 +1,9 @@
 """Streamlit UI for Prompt Quality Lab. Composes the optimiser modules."""
 from __future__ import annotations
 
+import html as html_lib
 import os
 from datetime import datetime
-import html as html_lib
 
 import streamlit as st
 from anthropic import Anthropic
@@ -23,8 +23,11 @@ try:
 except ImportError:
     PyPDF2 = None
 
+from credit_datasets import dataset_root, load_records
+from credit_datasets.schema import QualityGrade
 from prompt_quality_lab.anthropic_client import call_claude, evaluate_against_expected
 from prompt_quality_lab.config import AVAILABLE_MODELS
+from prompt_quality_lab.dataset_bridge import records_to_prompts
 from prompt_quality_lab.loaders import load_prompts
 from prompt_quality_lab.optimisers import langchain_template as lct
 from prompt_quality_lab.optimisers.dspy_bootstrap import dspy_style_bootstrap
@@ -32,8 +35,13 @@ from prompt_quality_lab.optimisers.prompt_improver import anthropic_prompt_impro
 from prompt_quality_lab.optimisers.variants import generate_variants
 
 
-def _sidebar() -> tuple[str, str, list, list, list, list]:
-    """Render the sidebar. Returns (api_key, model, uploaded_files, input_docs, target_docs, few_shot_files)."""
+def _sidebar() -> tuple[str, str, list, list, list, list, list[dict]]:
+    """Render the sidebar.
+
+    Returns (api_key, model, uploaded_files, input_docs, target_docs,
+    few_shot_files, dataset_prompts). The dataset_prompts are already-resolved
+    dicts in the optimiser's expected shape — they bypass load_prompts().
+    """
     with st.sidebar:
         st.header("⚙️ Setup")
         env_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -85,6 +93,8 @@ def _sidebar() -> tuple[str, str, list, list, list, list]:
                 "or run `uv sync` to install all requirements."
             )
         st.divider()
+        dataset_prompts = _dataset_picker()
+        st.divider()
         with st.expander("Input format hints"):
             st.markdown(
                 """
@@ -116,7 +126,51 @@ Expected: Résumer l'article en deux phrases.
 If the file contains a single block, it will be loaded as a single prompt.
 """
             )
-    return api_key, model, uploaded, input_docs, target_docs, few_shot
+    return api_key, model, uploaded, input_docs, target_docs, few_shot, dataset_prompts
+
+
+def _dataset_picker() -> list[dict]:
+    """Render the 'Load from Dataset Manager' picker. Returns selected records
+    already resolved to the optimiser's prompt-dict shape.
+
+    Records without input files are dropped (handled in records_to_prompts).
+    Records without a gold file pass through with empty expected_output, which
+    just means the optimisers run them unscored — same behavior as for uploaded
+    files that lack expected outputs.
+    """
+    st.subheader("📚 Load from Dataset Manager")
+    try:
+        records = load_records()
+    except (OSError, ValueError) as e:
+        st.caption(f"Could not read dataset: {e}")
+        return []
+
+    if not records:
+        st.caption("No records yet — add some via the Dataset Manager page.")
+        return []
+
+    gold_only = st.checkbox(
+        "Gold-graded only",
+        value=True,
+        key="dataset_gold_only",
+        help="Filter to records marked gold. Uncheck to also see silver/bronze.",
+    )
+    visible = [r for r in records if not gold_only or r.quality_grade == QualityGrade.GOLD]
+    if not visible:
+        st.caption("No gold-graded records. Uncheck the filter to see all.")
+        return []
+
+    options = {f"{r.id} — {r.company_name} ({r.quality_grade.value})": r for r in visible}
+    chosen_labels = st.multiselect(
+        "Pick records to feed into the optimisers",
+        options=list(options.keys()),
+        key="dataset_chosen",
+    )
+    if not chosen_labels:
+        return []
+
+    chosen_records = [options[label] for label in chosen_labels]
+    return records_to_prompts(chosen_records, dataset_root())
 
 
 def _load_target_style_examples(target_docs: list[dict]) -> list[dict]:
@@ -409,19 +463,30 @@ def main() -> None:
         "Test four prompt-optimisation strategies on your own prompts — powered by Anthropic Claude"
     )
 
-    api_key, model, uploaded, input_uploaded, target_uploaded, few_uploaded = _sidebar()
+    (
+        api_key,
+        model,
+        uploaded,
+        input_uploaded,
+        target_uploaded,
+        few_uploaded,
+        dataset_prompts,
+    ) = _sidebar()
 
     if not api_key:
         st.warning("👈 Add your Anthropic API key in the sidebar to begin.")
         st.stop()
-    if not uploaded and not input_uploaded:
+    if not uploaded and not input_uploaded and not dataset_prompts:
         st.info(
-            "👈 Upload one or more prompt files or credit paper input documents in the sidebar."
+            "👈 Upload one or more prompt files, credit paper input documents, "
+            "or pick records from the Dataset Manager in the sidebar."
         )
         st.stop()
 
     client = Anthropic(api_key=api_key)
     prompts, warnings = load_prompts(uploaded)
+    # Dataset Manager records are already in the right shape; concatenate.
+    prompts = prompts + dataset_prompts
     for w in warnings:
         st.warning(w)
 
