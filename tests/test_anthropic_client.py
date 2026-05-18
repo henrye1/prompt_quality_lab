@@ -8,7 +8,11 @@ import httpx
 import pytest
 from anthropic import RateLimitError
 
-from prompt_quality_lab.anthropic_client import call_claude, evaluate_against_expected
+from prompt_quality_lab.anthropic_client import (
+    call_claude,
+    call_claude_detailed,
+    evaluate_against_expected,
+)
 
 
 def _rate_limit_error(retry_after: str | None = None) -> RateLimitError:
@@ -18,11 +22,12 @@ def _rate_limit_error(retry_after: str | None = None) -> RateLimitError:
     return RateLimitError(message="rate limited", response=response, body=None)
 
 
-def make_fake_client(text: str) -> MagicMock:
+def make_fake_client(text: str, stop_reason: str = "end_turn") -> MagicMock:
     """Return a MagicMock that mimics `Anthropic` and yields `text` from messages.create."""
     client = MagicMock()
     client.messages.create.return_value = SimpleNamespace(
-        content=[SimpleNamespace(text=text)]
+        content=[SimpleNamespace(text=text)],
+        stop_reason=stop_reason,
     )
     return client
 
@@ -36,7 +41,7 @@ def test_call_claude_passes_model_and_prompt():
     assert kwargs["model"] == "claude-sonnet-4-6"
     assert kwargs["messages"] == [{"role": "user", "content": "hello"}]
     assert kwargs["system"] == "You are a helpful assistant."
-    assert kwargs["max_tokens"] == 2048
+    assert kwargs["max_tokens"] == 8192  # DEFAULT_MAX_TOKENS
 
 
 def test_call_claude_uses_custom_system():
@@ -55,6 +60,21 @@ def test_call_claude_accepts_temperature_override():
     client = make_fake_client("ok")
     call_claude(client, "hi", model="m", temperature=0.7)
     assert client.messages.create.call_args.kwargs["temperature"] == 0.7
+
+
+def test_call_claude_detailed_returns_stop_reason():
+    client = make_fake_client("ok", stop_reason="end_turn")
+    text, reason = call_claude_detailed(client, "hi", model="m")
+    assert text == "ok"
+    assert reason == "end_turn"
+
+
+def test_call_claude_warns_on_max_tokens_truncation(capsys):
+    client = make_fake_client("partial output", stop_reason="max_tokens")
+    call_claude(client, "hi", model="m")
+    captured = capsys.readouterr()
+    assert "truncated" in captured.err
+    assert "max_tokens" in captured.err
 
 
 def test_evaluate_returns_actual_only_when_no_expected():

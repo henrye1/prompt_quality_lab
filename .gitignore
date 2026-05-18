@@ -27,6 +27,13 @@ env/
 # Claude Code local settings
 .claude/
 
+# OneDrive sync-conflict copies (this repo lives under OneDrive; when a file
+# is edited on two machines before sync, OneDrive creates a duplicate with a
+# machine-name suffix like "*-Henry-NewPC.*"). They are never the canonical
+# file and should never be committed.
+*-Henry-NewPC*
+*-NewPC*
+
 # OS
 .DS_Store
 Thumbs.db

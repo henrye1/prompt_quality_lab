@@ -1,6 +1,7 @@
 """Thin wrapper around the Anthropic SDK. All API calls flow through here."""
 from __future__ import annotations
 
+import sys
 import time
 
 from anthropic import Anthropic, RateLimitError
@@ -15,6 +16,13 @@ _BACKOFF_CAP_S = 60.0
 # API exposes. Tabs that need diversity (e.g. variant generation) override this
 # explicitly per call.
 DEFAULT_TEMPERATURE = 0.0
+
+# Default per-response token budget. Bumped from 2048 because long prompts
+# (especially credit-paper-sized) were getting silently truncated mid-rewrite.
+# 8192 covers ~6000 words — enough for any realistic prompt-improver / DSPy
+# / LangChain output. Anthropic charges per output token *used*, not per
+# max_tokens, so a generous cap is safe.
+DEFAULT_MAX_TOKENS = 8192
 
 
 def _retry_after_seconds(err: RateLimitError, attempt: int) -> float:
@@ -35,14 +43,34 @@ def call_claude(
     prompt: str,
     model: str = DEFAULT_MODEL,
     system: str | None = None,
-    max_tokens: int = 2048,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
     temperature: float = DEFAULT_TEMPERATURE,
 ) -> str:
     """Single-turn Claude call. Retries on 429 with backoff. Returns assistant text.
 
     `temperature` defaults to 0.0 for reproducibility. Callers that want diverse
     output (e.g. variant generation) should pass a higher value explicitly.
+
+    If the response is truncated because `max_tokens` was reached, a warning is
+    printed to stderr (visible in the terminal running Streamlit). Callers that
+    need to surface this in the UI should use `call_claude_detailed` instead.
     """
+    text, _ = call_claude_detailed(
+        client, prompt, model=model, system=system, max_tokens=max_tokens, temperature=temperature
+    )
+    return text
+
+
+def call_claude_detailed(
+    client: Anthropic,
+    prompt: str,
+    model: str = DEFAULT_MODEL,
+    system: str | None = None,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    temperature: float = DEFAULT_TEMPERATURE,
+) -> tuple[str, str]:
+    """Like `call_claude` but also returns `stop_reason` so callers can detect
+    truncation (`stop_reason == "max_tokens"`) and warn the user."""
     for attempt in range(_MAX_RETRIES):
         try:
             msg = client.messages.create(
@@ -52,7 +80,14 @@ def call_claude(
                 system=system or "You are a helpful assistant.",
                 messages=[{"role": "user", "content": prompt}],
             )
-            return msg.content[0].text
+            stop_reason = getattr(msg, "stop_reason", "") or ""
+            if stop_reason == "max_tokens":
+                print(
+                    f"[anthropic_client] WARNING: response truncated at max_tokens={max_tokens}. "
+                    "Increase the cap or shorten the prompt.",
+                    file=sys.stderr,
+                )
+            return msg.content[0].text, stop_reason
         except RateLimitError as err:
             if attempt == _MAX_RETRIES - 1:
                 raise
