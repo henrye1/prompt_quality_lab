@@ -23,7 +23,9 @@ def generate_variants(client: Anthropic, prompt: str, n: int, model: str) -> lis
         "No commentary, no markdown fences.\n\n"
         f'PROMPT:\n"""\n{prompt}\n"""'
     )
-    raw = call_claude(client, request, model=model)
+    # Variant generation explicitly needs diversity — at the default temperature=0
+    # Claude would return the same N variants every call.
+    raw = call_claude(client, request, model=model, temperature=1.0)
     try:
         start = raw.find("[")
         end = raw.rfind("]") + 1

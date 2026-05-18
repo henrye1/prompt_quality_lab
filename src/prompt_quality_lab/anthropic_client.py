@@ -10,6 +10,12 @@ from prompt_quality_lab.config import DEFAULT_MODEL
 _MAX_RETRIES = 5
 _BACKOFF_CAP_S = 60.0
 
+# Default sampling temperature for every call. The Anthropic API has no `seed`
+# parameter (unlike OpenAI); temperature=0 is the most reproducible setting the
+# API exposes. Tabs that need diversity (e.g. variant generation) override this
+# explicitly per call.
+DEFAULT_TEMPERATURE = 0.0
+
 
 def _retry_after_seconds(err: RateLimitError, attempt: int) -> float:
     """Prefer the server's retry-after hint; otherwise exponential backoff (capped)."""
@@ -30,13 +36,19 @@ def call_claude(
     model: str = DEFAULT_MODEL,
     system: str | None = None,
     max_tokens: int = 2048,
+    temperature: float = DEFAULT_TEMPERATURE,
 ) -> str:
-    """Single-turn Claude call. Retries on 429 with backoff. Returns assistant text."""
+    """Single-turn Claude call. Retries on 429 with backoff. Returns assistant text.
+
+    `temperature` defaults to 0.0 for reproducibility. Callers that want diverse
+    output (e.g. variant generation) should pass a higher value explicitly.
+    """
     for attempt in range(_MAX_RETRIES):
         try:
             msg = client.messages.create(
                 model=model,
                 max_tokens=max_tokens,
+                temperature=temperature,
                 system=system or "You are a helpful assistant.",
                 messages=[{"role": "user", "content": prompt}],
             )

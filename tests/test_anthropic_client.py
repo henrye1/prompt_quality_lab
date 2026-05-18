@@ -45,6 +45,18 @@ def test_call_claude_uses_custom_system():
     assert client.messages.create.call_args.kwargs["system"] == "You are a judge."
 
 
+def test_call_claude_defaults_temperature_to_zero_for_reproducibility():
+    client = make_fake_client("ok")
+    call_claude(client, "hi", model="m")
+    assert client.messages.create.call_args.kwargs["temperature"] == 0.0
+
+
+def test_call_claude_accepts_temperature_override():
+    client = make_fake_client("ok")
+    call_claude(client, "hi", model="m", temperature=0.7)
+    assert client.messages.create.call_args.kwargs["temperature"] == 0.7
+
+
 def test_evaluate_returns_actual_only_when_no_expected():
     client = make_fake_client("actual response")
     actual, score = evaluate_against_expected(client, "prompt", expected="", model="m")
