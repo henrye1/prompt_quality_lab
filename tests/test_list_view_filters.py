@@ -2,16 +2,9 @@ from __future__ import annotations
 
 from datetime import date
 
-import pytest
+from credit_datasets.schema import AssetClass, QualityGrade, Record, Source
 
-# credit_datasets is an optional local dep (see pyproject.toml [project.optional-dependencies]).
-# When it's not installed (e.g. CI without the sibling ../credit_datasets repo, or Render),
-# skip the entire module rather than fail.
-pytest.importorskip("credit_datasets")
-
-from credit_datasets.schema import AssetClass, QualityGrade, Record, Source  # noqa: E402
-
-from prompt_quality_lab.dataset_manager.list_view import filter_records  # noqa: E402
+from prompt_quality_lab.dataset_manager.list_view import filter_records
 
 
 def _r(**over) -> Record:

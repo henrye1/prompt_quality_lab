@@ -214,19 +214,6 @@ wheels = [
 ]
 
 [[package]]
-name = "credit-datasets"
-version = "0.1.0"
-source = { editable = "../credit_datasets" }
-
-[package.metadata]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.0" },
-    { name = "ruff", specifier = ">=0.6" },
-]
-
-[[package]]
 name = "distro"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1237,11 +1224,6 @@ dependencies = [
     { name = "streamlit" },
 ]
 
-[package.optional-dependencies]
-dataset-manager = [
-    { name = "credit-datasets" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -1251,7 +1233,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
-    { name = "credit-datasets", marker = "extra == 'dataset-manager'", editable = "../credit_datasets" },
     { name = "langchain", specifier = ">=0.3" },
     { name = "langchain-anthropic", specifier = ">=0.3" },
     { name = "langchain-core", specifier = ">=0.3" },
@@ -1262,7 +1243,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "streamlit", specifier = ">=1.32" },
 ]
-provides-extras = ["dataset-manager"]
 
 [package.metadata.requires-dev]
 dev = [

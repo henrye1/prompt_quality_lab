@@ -16,12 +16,6 @@ dependencies = [
     "PyPDF2>=3.0",
 ]
 
-[project.optional-dependencies]
-# Powers the Dataset Manager page. Resolved locally via [tool.uv.sources] below.
-# Not installed by default so cloud deploys (Render, etc.) can `pip install -e .`
-# without needing the sibling ../credit_datasets directory.
-dataset-manager = ["credit-datasets"]
-
 [dependency-groups]
 dev = [
     "pytest>=8.0",
@@ -33,7 +27,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/prompt_quality_lab"]
+# Two top-level packages ship together: the app and the vendored dataset library.
+packages = ["src/prompt_quality_lab", "src/credit_datasets"]
 
 [tool.ruff]
 line-length = 100
@@ -41,9 +36,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-
-[tool.uv.sources]
-credit-datasets = { path = "../credit_datasets", editable = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
