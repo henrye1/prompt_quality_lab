@@ -4,7 +4,18 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import httpx
+import pytest
+from anthropic import RateLimitError
+
 from prompt_quality_lab.anthropic_client import call_claude, evaluate_against_expected
+
+
+def _rate_limit_error(retry_after: str | None = None) -> RateLimitError:
+    headers = {"retry-after": retry_after} if retry_after is not None else {}
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    response = httpx.Response(429, headers=headers, request=request)
+    return RateLimitError(message="rate limited", response=response, body=None)
 
 
 def make_fake_client(text: str) -> MagicMock:
@@ -61,6 +72,34 @@ def test_evaluate_parses_decimal_with_trailing_punctuation():
     ]
     _, score = evaluate_against_expected(client, "p", expected="e", model="m")
     assert score == 7.5
+
+
+def test_call_claude_retries_on_rate_limit_then_succeeds(monkeypatch):
+    sleeps: list[float] = []
+    monkeypatch.setattr(
+        "prompt_quality_lab.anthropic_client.time.sleep", lambda s: sleeps.append(s)
+    )
+    client = MagicMock()
+    client.messages.create.side_effect = [
+        _rate_limit_error(retry_after="2"),
+        _rate_limit_error(retry_after=None),
+        SimpleNamespace(content=[SimpleNamespace(text="success")]),
+    ]
+    out = call_claude(client, "hi", model="m")
+    assert out == "success"
+    assert client.messages.create.call_count == 3
+    # First sleep honors retry-after header; second falls back to backoff (2 ** 1 = 2).
+    assert sleeps == [2.0, 2.0]
+
+
+def test_call_claude_raises_after_max_retries(monkeypatch):
+    monkeypatch.setattr("prompt_quality_lab.anthropic_client.time.sleep", lambda _s: None)
+    monkeypatch.setattr("prompt_quality_lab.anthropic_client._MAX_RETRIES", 3)
+    client = MagicMock()
+    client.messages.create.side_effect = [_rate_limit_error() for _ in range(3)]
+    with pytest.raises(RateLimitError):
+        call_claude(client, "hi", model="m")
+    assert client.messages.create.call_count == 3
 
 
 def test_evaluate_returns_none_when_score_unparseable():
