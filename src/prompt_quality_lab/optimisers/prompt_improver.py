@@ -19,4 +19,4 @@ ORIGINAL PROMPT:
 \"\"\"
 {prompt}
 \"\"\""""
-    return call_claude(client, meta, model=model)
+    return call_claude(client, meta, model=model, max_tokens=64000)

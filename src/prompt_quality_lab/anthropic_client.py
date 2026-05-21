@@ -24,6 +24,11 @@ DEFAULT_TEMPERATURE = 0.0
 # max_tokens, so a generous cap is safe.
 DEFAULT_MAX_TOKENS = 8192
 
+# Above this output budget the Anthropic SDK refuses non-streaming requests
+# (it estimates worst-case latency > 10 min). Switch to streaming silently
+# instead of crashing.
+_STREAMING_MAX_TOKENS_THRESHOLD = 8192
+
 
 def _retry_after_seconds(err: RateLimitError, attempt: int) -> float:
     """Prefer the server's retry-after hint; otherwise exponential backoff (capped)."""
@@ -71,15 +76,29 @@ def call_claude_detailed(
 ) -> tuple[str, str]:
     """Like `call_claude` but also returns `stop_reason` so callers can detect
     truncation (`stop_reason == "max_tokens"`) and warn the user."""
+    use_streaming = max_tokens > _STREAMING_MAX_TOKENS_THRESHOLD
     for attempt in range(_MAX_RETRIES):
         try:
-            msg = client.messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=system or "You are a helpful assistant.",
-                messages=[{"role": "user", "content": prompt}],
-            )
+            if use_streaming:
+                # The SDK refuses non-streaming when worst-case latency could
+                # exceed 10 minutes (typically when max_tokens is large). Use
+                # the streaming API and collect the final message at the end.
+                with client.messages.stream(
+                    model=model,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    system=system or "You are a helpful assistant.",
+                    messages=[{"role": "user", "content": prompt}],
+                ) as stream:
+                    msg = stream.get_final_message()
+            else:
+                msg = client.messages.create(
+                    model=model,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    system=system or "You are a helpful assistant.",
+                    messages=[{"role": "user", "content": prompt}],
+                )
             stop_reason = getattr(msg, "stop_reason", "") or ""
             if stop_reason == "max_tokens":
                 print(
@@ -100,13 +119,20 @@ def evaluate_against_expected(
     prompt: str,
     expected: str,
     model: str = DEFAULT_MODEL,
+    actual: str | None = None,
 ) -> tuple[str, float | None]:
     """Run the prompt, then ask Claude to score actual vs expected (0-10).
 
     Returns (actual_output, score_or_None). Score is None when expected is empty
     or when the judge response can't be parsed as a number.
+
+    If `actual` is supplied, the generation step is skipped — useful when the
+    caller has already run the prompt and only needs the score (e.g. the DSPy
+    tab, which generates baseline and few-shot output up front and would
+    otherwise re-run them here).
     """
-    actual = call_claude(client, prompt, model=model)
+    if actual is None:
+        actual = call_claude(client, prompt, model=model)
     if not expected.strip():
         return actual, None
     judge = (

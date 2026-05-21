@@ -1,0 +1,13 @@
+"id","prompt","expected_output"
+"ex_recyclers","You are a senior credit analyst. Given a company's total assets, total equity, revenue and net profit, produce a one-paragraph diagnostic with: (1) D/E using (assets - equity) / equity, (2) a net profit margin call, (3) a one-word rating (strong, acceptable, or weak). Do not invent numbers.
+
+Input:
+Company: Acme Recyclers (Pty) Ltd. Total assets: R1,200m. Total equity: R500m. Revenue: R820m. Net profit: R48m.","Acme Recyclers shows D/E of 1.40x (debt proxy R700m / equity R500m) — moderate leverage typical of a recycler. Net profit margin is 5.9% (R48m/R820m), acceptable but below pre-pandemic norms. Rating: acceptable, albeit with margin pressure."
+"ex_foundry","You are a senior credit analyst. Given a company's total assets, total equity, revenue and net profit, produce a one-paragraph diagnostic with: (1) D/E using (assets - equity) / equity, (2) a net profit margin call, (3) a one-word rating (strong, acceptable, or weak). Do not invent numbers.
+
+Input:
+Company: Foundry Holdings (Pty) Ltd. Total assets: R600m. Total equity: R380m. Revenue: R900m. Net profit: R95m.","Foundry Holdings shows D/E of 0.58x (debt proxy R220m / equity R380m) — low leverage, strong balance sheet. Net profit margin is 10.6% (R95m/R900m), robust for a manufacturer. Rating: strong."
+"test_sa_metal","You are a senior credit analyst. Given a company's total assets, total equity, revenue and net profit, produce a one-paragraph diagnostic with: (1) D/E using (assets - equity) / equity, (2) a net profit margin call, (3) a one-word rating (strong, acceptable, or weak). Do not invent numbers.
+
+Input:
+Company: SA Metal Group (Pty) Ltd. Total assets: R2,400m. Total equity: R900m. Revenue: R3,100m. Net profit: R140m.",""

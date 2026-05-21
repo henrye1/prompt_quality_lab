@@ -208,4 +208,15 @@ def load_prompts(uploaded_files) -> tuple[list[dict], list[str]]:
         else:
             warnings.append(f"Skipping unsupported file type: {f.name}")
 
+    # Dedupe ids: if the same id appears more than once across uploads,
+    # suffix later occurrences with #2, #3, ... so downstream Streamlit
+    # widget keys (e.g. lc_{id}_{var}) don't collide.
+    seen: dict[str, int] = {}
+    for rec in prompts:
+        original_id = rec["id"]
+        count = seen.get(original_id, 0)
+        if count:
+            rec["id"] = f"{original_id}#{count + 1}"
+        seen[original_id] = count + 1
+
     return prompts, warnings
