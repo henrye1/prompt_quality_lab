@@ -320,12 +320,20 @@ def _tab_dspy(client: Anthropic, prompts: list[dict], labelled: list[dict], mode
         )
         return
 
-    n_shots = st.slider(
-        "Few-shot examples per prompt",
-        1,
-        min(5, len(labelled)),
-        min(3, len(labelled)),
-    )
+    max_shots = min(5, len(labelled))
+    if max_shots <= 1:
+        n_shots = max_shots
+        st.caption(
+            f"Using all **{max_shots}** labelled example(s) as few-shot "
+            "(slider needs at least 2 labelled prompts)."
+        )
+    else:
+        n_shots = st.slider(
+            "Few-shot examples per prompt",
+            1,
+            max_shots,
+            min(3, max_shots),
+        )
     if st.button("🚀 Run DSPy-style optimisation", key="dspy_run", type="primary"):
         for target in prompts:
             fs_pool = [p for p in labelled if p["id"] != target["id"]][:n_shots]
@@ -351,11 +359,17 @@ def _tab_dspy(client: Anthropic, prompts: list[dict], labelled: list[dict], mode
 
                 if target["expected_output"]:
                     with st.spinner("Scoring..."):
+                        # Reuse the already-generated baseline/boosted outputs
+                        # instead of re-running the prompts (the prompts here
+                        # can be 15+ KB, so re-running them would roughly
+                        # double the DSPy tab's wall-clock time).
                         _, b_score = evaluate_against_expected(
-                            client, target["prompt"], target["expected_output"], model
+                            client, target["prompt"], target["expected_output"], model,
+                            actual=baseline,
                         )
                         _, n_score = evaluate_against_expected(
-                            client, augmented, target["expected_output"], model
+                            client, augmented, target["expected_output"], model,
+                            actual=boosted,
                         )
                     c1, c2, c3 = st.columns(3)
                     c1.metric("Baseline score", b_score)

@@ -1,0 +1,481 @@
+"id","prompt","expected_output"
+"acme_recyclers_labelled","# Financial Health Diagnostic Analysis — Task Instructions
+
+## 1. Role and Objective
+Act as a senior credit/financial analyst preparing a financial health diagnostic report for a regulatory audience (e.g., SARB). Your objective is to analyze a company's financial health using all provided inputs — Annual Financial Statements (AFS), supplementary data extracts/model outputs, and any recent unaudited management accounts — and produce a structured, evidence-based assessment that integrates quantitative ratios with qualitative context.
+
+## 2. Inputs You Will Receive
+- Audited Annual Financial Statements (balance sheet, income statement, cash flow statement, statement of changes in equity, notes).
+- Supplementary data (ratio summaries, model outputs).
+- Recent unaudited management accounts (when provided).
+- Qualitative information (company background, industry, market conditions).
+
+If any input is missing, explicitly state this and explain the impact on the analysis.
+
+## 3. Data Source Hierarchy (apply throughout)
+1. **Audited AFS** — primary source for historical/audited periods. Prioritize AFS-stated figures for CFO (Cash Flow Statement), dividends paid (Statement of Changes in Equity/notes), and ratios over any summary/model output.
+2. **Unaudited management accounts** — required for the most current view; always label as ""unaudited"" and flag material deviations from audited trends.
+3. **Model outputs / pre-calculated ratios** — use in summary tables that are meant to reflect that source. For narrative analysis, independently recompute from AFS where possible. Flag and explain any material discrepancies.
+4. **Calculations (e.g., indirect-method CFO)** — only when no statement is available; state methodology and limitations.
+
+## 4. Cross-Cutting Analytical Principles (apply in every section)
+
+### 4.1 Understand the ""Why""
+Go beyond ratio calculation: link quantitative findings to operations, strategy, and market conditions.
+
+### 4.2 Context
+Interpret data relative to industry (service, manufacturing, non-profit, construction, tech, financial institution, etc.), size, operating model, and external events (COVID-19, regulatory changes, geopolitical/supply-chain shocks).
+
+### 4.3 Qualitative Overlay
+- **Company background & strategy:** founding, milestones, leadership/ownership changes (acquisitions, listings/delistings), strategic shifts, market position, competitive advantages.
+- **Key management shareholdings:** identify and note any significant direct shareholding by key managers as an indicator of aligned incentives and retention.
+- **Source preference:** prioritize official company documents (annual reports, ""About Us"") over generic web sources.
+- **Operational context:** key partnerships, certifications, BBBEE status (where relevant).
+- **Industry dynamics:** disruption, demand drivers, regulatory shifts, geopolitical impacts.
+
+### 4.4 Mandatory Related-Party Transaction (RPT) Analysis
+If material RPT balances or transactions exist:
+- Identify and quantify (absolute amounts and as % of total assets, equity, or current liabilities).
+- Assess nature, terms, arm's-length character, commercial rationale, recoverability, and contagion risk.
+- Compute an **Adjusted Tangible Net Worth** and **Adjusted Current Ratio / Leverage** excluding or reclassifying material/questionable RPT items; document each adjustment and rationale.
+- Apply professional skepticism where auditor commentary on recoverability is absent.
+- Explicitly discuss insolvency risk if a material RPT loan proved unrecoverable.
+- Summarize combined RPT exposure in the Key Ratio Summary if it represents a significant concentration of value or risk.
+
+### 4.5 Quality of Earnings
+- Do not take reported profits at face value.
+- Quantify the impact of non-recurring items, exceptional items, and volatile ""Other Income"" (e.g., grants, FX, bad debt reversals, gains on disposals, impairment reversals).
+- Discuss performance both including and excluding such items.
+- For material non-guaranteed income (e.g., government subsidies/grants), perform a sensitivity / ""what-if"" analysis showing impact on PAT and key margins.
+- **Define the PAT figure used** for any Net Profit Margin (NPM) or return metric:
+  - Specify whether ""PAT before NCI"" or ""PAT attributable to parent equity holders.""
+  - Default to PAT attributable to parent for shareholder-return metrics.
+  - Apply consistently across trend analyses; if different figures appear in different tables, reconcile and explain.
+- Distinguish one-off equity/cash-flow adjustments (e.g., prior-period tax) from current operating margin impacts.
+
+### 4.6 Cash Flow Analysis
+- Use AFS-stated CFO for audited periods (include even if model inputs omit it).
+- Incorporate management-account-derived CFO for recent unaudited periods, clearly labelled.
+- Calculate CFO (indirect method) only where no statement exists; disclose method and limitations.
+- Reconcile and explain material differences between AFS, management-account, and calculated CFO.
+- Integrate CFO into narrative on liquidity, working capital, debt service, and sustainability — not just as a standalone metric.
+
+### 4.7 Dividend Analysis
+- Source from Statement of Changes in Equity / AFS notes for audited periods; from management accounts for recent periods.
+- If inferred: Dividends ≈ PAT − (Δ Retained Earnings − other direct RE adjustments). State method and limitations.
+- Assess dividend payout vs. CFO, profitability (PAT attributable to parent), and liquidity. Flag large dividends paid from weak CFO or strained liquidity.
+- Comment on cumulative dividends vs. cumulative profits over multiple years where data allows.
+
+### 4.8 Ratio Consistency
+- Ensure internal consistency across narrative, tables, and appendices.
+- Use model-output ratios in tables designed to reflect them; recompute from AFS for the narrative.
+- Disclose and explain any material discrepancies (e.g., ""Model output D/E = X%; AFS-derived D/E = Z%, due to…"").
+- Flag apparent errors in summary inputs; prioritize AFS-corrected figures in the narrative.
+
+### 4.9 Nuanced, Substantiated Conclusions
+- Substantiate every rating (""strong,"" ""weak,"" ""acceptable,"" etc.) with specific quantitative and qualitative evidence.
+- Use nuanced phrasing for mixed situations (e.g., ""acceptable, albeit with margin pressure""; ""strong liquidity, though working-capital cycle has lengthened"").
+- State whether a rating is based purely on the P&L for the period or incorporates balance-sheet, cash-flow, and qualitative mitigants.
+- Identify the source period (AFS vs. management accounts) for any performance rating.
+- Reconcile qualitative claims (e.g., ""the company is cash generative"") with quantitative CFO; flag and explain contradictions.
+
+### 4.10 Conditional Final Conclusions (Regulatory Perspective)
+- Adopt a conservative, forward-looking risk lens.
+- Where solvency/liquidity depends on uncertain future events (sustained recovery in unaudited accounts, RPT recoverability, group support), make the conclusion explicitly conditional (e.g., ""has the ability to meet commitments, provided Y improvements seen in management accounts are realised in audited results and sustained"").
+- A single period of unaudited recovery does not override structural weaknesses without strong caveats.
+
+## 5. Required Diagnostic Sections
+Produce the analysis in the following numbered sections. For each section, apply the cross-cutting principles in Section 4, examine both AFS and management-account data (noting source and differences), and address: Composition/Position, Ratios, Changes Over Time, and Causes for Changes.
+
+### 5.1 Asset/Liability Structure & Financial Position
+- **Composition (%):** Non-current vs. current assets; key current-asset components (cash, marketable securities, trade receivables [with ageing/concentration and RPT receivables], inventory [obsolescence risk, WIP/contract assets], deposits, levies for associations); key non-current components (PPE incl. ROU, intangibles incl. goodwill, investment property, investments/loans to subs/related parties, derivatives, FVTPL assets; for FIs: loans & advances, investment securities, deposits from customers); current vs. non-current liabilities and equity; current-liability components (trade payables, accruals, tax, contract liabilities, current portion LTD, put-option liabilities); debt breakdown (interest-bearing vs. not; shareholder/RPT loans vs. external; subordination; arm's-length terms; net of transaction costs; secured vs. unsecured; instalment sale, vehicle/trade finance, finance leases, factoring; current vs. non-current).
+- **Position:** absolute values of total assets, NCA, CA, total liabilities, NCL (incl. lease liabilities), CL, total debt (incl. overdrafts); note low/no external debt; branch capital for foreign-branch entities.
+- **Ratios:** D/E (with and without RPT/shareholder loans, and after justified intercompany netting), Gearing, Total Assets/Total Liabilities, Current Ratio (and adjusted CR), Quick Ratio (and adjusted), Net Debt (and adjusted), regulatory capital ratios where relevant.
+- **Distinguish** related-party ""loans"" from equity investments (e.g., Investment in Associate/Subsidiary).
+- **Causes:** debt vs. asset purchases / working capital / loss funding / refinancing; equity changes from profits, issues, dividends, losses; cumulative impact of sustained dividends; revaluations.
+
+### 5.2 Net Worth (Equity)
+- **Position:** Total Equity (flag negative); accumulated losses; equity vs. total assets/debt/operations.
+- **Changes:** absolute and % change.
+- **Causes:** PAT impact; dividends (AFS-sourced, or inferred with method shown); cumulative dividends vs. cumulative profits; share capital injections/buybacks; loss erosion; asset write-offs; prior-year adjustments; reserve movements (common control, NCI transactions, share-based payments).
+- **Quality:** identify intangibles; compute **Tangible Net Worth** and **Adjusted Tangible Net Worth** (further deducting material/questionable RPT receivables); discuss key items deducted; flag dependence on deferred tax assets or RPT recoverability; note industry-appropriate equity bases (e.g., service firms); NPO reserves (designated/restricted funds).
+
+### 5.3 Financial Sustainability
+- **Ratios:** Net Profit Margin (specify PAT basis); D/E (variants); Gearing; Interest Coverage; Book Equity/Total Liabilities; Credit Loss Ratio (FIs); regulatory capital adherence.
+- **Trends:** earnings (Net Profit, EBIT, EBITDA) from core operations; (adjusted tangible) equity base; leverage and coverage.
+- **Causes:** cost-structure shifts (BEE costs, ECL provisions, R&D); exceptional/non-recurring items; ""Other Income"" quality; debt-funded acquisitions; finance-cost trends; deferred tax; cumulative negative CFO; shareholder-support reliance (assess terms); IFRS 16 impact; external context (COVID-19, market conditions).
+
+### 5.4 Working Capital
+- **Position:** Net Working Capital; cash, trade receivables, inventory, trade payables.
+- **Ratios:** Current Ratio, Quick Ratio, Cash Conversion Cycle (Inventory Days + Receivables Days − Payables Days), with each component calculated using averages where appropriate.
+- **Trends and causes:** sales/purchasing/credit policy changes; inventory management; seasonality; consistency across periods; investigate counterintuitive movements.
+
+### 5.5 Liquidity
+- **Position:** cash & equivalents, marketable securities vs. short-term obligations.
+- **Ratios:** Current, Quick, Cash Ratio.
+- **Coverage:** committed undrawn facilities/overdrafts.
+- **Trends & causes:** operational cash generation (CFO source-tagged); investing flows (capex, disposals); financing flows (debt, equity, dividends); unusual flows.
+- **Reconcile qualitative claims** about cash generation with CFO; flag and investigate contradictions.
+
+### 5.6 Financial Performance (Results Overview)
+- **Trends (absolute and %):** Revenue (drivers: projects, client wins/losses, mix shifts, tender contracts; distinguish core vs. dividends/management fees/rental/FV adjustments/levies; AUM for asset managers); COGS (incl. subcontractor costs); Gross Profit; OpEx (highlight largest contributing sub-categories: BEE, ECL, impairments of RPT/subs, R&D, project costs, related-party service fees); OpEx/Turnover; EBIT; EBITDA; PAT (state pre- or post-NCI basis consistently); profit/loss from discontinued operations; income before exceptional items.
+- **Causes:** differential growth rates and their margin impacts; interest/tax effects; nature/recurrence of Other Income; exceptional items (gain/loss on disposal, impairments, acquisition costs, lease termination gains/losses) — analyse performance with and without; impairments of financial assets/RPT receivables; FX impacts; revenue-recognition methods (e.g., percentage-of-completion, tender contracts).
+
+### 5.7 Profitability
+- **Margins:** Gross, Operating (EBIT), EBITDA, Net (assess sustainability vs. Other Income/exceptional; reaffirm PAT basis).
+- **Returns:** ROE (and ROE on adjusted tangible NW), ROA, ROCE/ROIC — use average balances where available.
+- **Trends & causes:** expense/revenue ratio shifts; sub-category drivers where data permits; asset/capital base changes vs. profit; industry/operational context; Other Income drivers.
+
+### 5.8 Business Activity (Turnover Ratios)
+- **Growth:** revenue growth rate; client/project drivers; industry context (post-COVID, safety demand, supply-chain disruption, regional conflicts); note year-end timing when discussing external events for comparability.
+- **Ratios:** Total Asset Turnover (Revenue/Total Assets); OpEx/Turnover.
+- **Causes:** revenue vs. asset-base correlation (incl. WIP/contract assets); external drivers; COGS-vs-revenue percentage changes; efficiency vs. margin pressure.
+
+## 6. Summary / Key Ratio Section
+Include a Key Ratio Summary that:
+- Uses pre-calculated input ratios where the table is meant to reflect them (note any flagged corrections).
+- **Quantifies material balance-sheet exposures** critical to the risk profile (e.g., ""Intangibles + net RPT investments/receivables = X% of total equity per latest [AFS/management accounts]""), linking back to the detailed sections.
+- Specifies whether figures are from AFS or unaudited management accounts.
+
+## 7. Output Format
+Structure the report with the numbered sections in Section 5 (and the Summary in Section 6). For each section:
+1. **Findings** — quantitative results (with source tag: AFS/management accounts/calculated).
+2. **Drivers & Context** — qualitative explanation and industry/strategic linkage.
+3. **Adjustments** — any reclassifications/nettings/adjusted ratios with documented rationale.
+4. **Rating** — nuanced rating with explicit substantiation, mitigants, and caveats.
+
+Conclude with a **Final Overall Assessment** that:
+- Is conditional where appropriate.
+- Clearly states dependencies, limitations, and the unaudited status of any management-account-derived inputs.
+- Adopts the conservative regulatory perspective described in Section 4.10.
+
+## 8. Style Requirements
+- Be precise, source-tagged, and internally consistent.
+- Avoid stark binary ratings where mitigants/pressures justify nuance.
+- Document every analytical adjustment with rationale.
+- Highlight, do not hide, discrepancies and data-quality concerns.
+---
+## Company Data (FY23, audited)
+
+**Company:** Acme Recyclers (Pty) Ltd — South Africa, scrap metal recycling, founded 1998, BBBEE Level 4. Key management hold 35% direct equity.
+
+**Balance Sheet (Rm):**
+- Non-current assets: 480 (PPE 420 incl. ROU 35; Intangibles 35 incl. goodwill 30; Investment in associate 25)
+- Current assets: 280 (Cash 45; Trade receivables 130 [top 5 clients 52%, 90+ days 12%]; Inventory 95; RPT receivable from parent 10)
+- Total assets: 760
+
+- Equity: 310 (Share capital 50; Retained earnings 240; Other reserves 20)
+- Non-current liabilities: 220 (Term loans 165; Lease liabilities 35; Deferred tax 20)
+- Current liabilities: 230 (Trade payables 95; Accruals 30; Current portion LTD 45; Bank overdraft 35; RPT payable 25)
+
+**Income Statement (Rm):**
+- Revenue: 820 (FY22: 750, +9.3%)
+- COGS: 590; Gross profit: 230 (28.0% margin)
+- OpEx: 145 (incl. ECL provision 12; impairment of RPT receivable 5)
+- EBITDA: 110; D&A: 25; EBIT: 85
+- Net finance costs: 22; PBT: 63; Tax: 15; PAT: 48 (PAT attributable to parent: 48 — no NCI)
+
+**Cash Flow (AFS-stated):**
+- CFO: 72 (FY22: 88)
+- CFI: -45 (capex 40, disposals 5 inflow, acquisition of associate -10)
+- CFF: -38 (debt repayment 25, dividends paid 15, new debt drawn 2)
+- Net change in cash: -11
+
+**Notes:**
+- Dividends declared FY23: R15m (Statement of Changes in Equity). Cumulative 3yr dividends: R42m vs cumulative PAT R135m.
+- RPT receivable R10m from parent: no formal terms, interest-free, recoverability flagged by auditor as ""subject to parent's liquidity"".
+- Goodwill R30m from FY21 acquisition of recycling depot in Durban — no impairment indicators per management.
+","## Financial Health Diagnostic — Acme Recyclers (Pty) Ltd
+
+### 5.1 Asset/Liability Structure & Financial Position
+**Findings (AFS FY23):** Total assets R760m. Composition: Non-current 63%, current 37%. Key non-current items: PPE R420m (55% of TA); Intangibles R35m (4.6%, R30m goodwill); Investment in associate R25m. Current assets: cash R45m (5.9% of TA), trade receivables R130m (top 5 clients 52%, 12% in 90+ days), inventory R95m, RPT receivable R10m. External interest-bearing debt R245m; RPT payable R25m. D/E (external IBD / equity) = 0.79x. Current ratio: 1.22x; Adjusted CR (netting RPT): 1.30x. Quick ratio: 0.80x.
+**Drivers & Context:** Balance sheet typical for a capital-intensive recycler — PPE-heavy, modest external leverage offset by a small RPT layer.
+**Adjustments:** Adjusted Tangible Net Worth = R310m − R30m goodwill − R10m RPT receivable = **R270m**.
+**Rating:** Acceptable. Capital structure is workable, but RPT recoverability (auditor caveat) and 12% receivables in 90+ days are watchpoints.
+
+### 5.2 Net Worth (Equity)
+**Findings:** Equity R310m (+R33m YoY, +12%). TNW R280m; Adjusted TNW R270m.
+**Drivers:** PAT R48m − dividends R15m = +R33m retained. 3-year cumulative payout 31% — conservative.
+**Rating:** Acceptable, trending positive.
+
+### 5.3 Financial Sustainability
+**Findings:** NPM (PAT attributable to parent) 5.85%. EBITDA margin 13.4%. Interest coverage = 85/22 = 3.86x. Book Equity/Total Liabilities = 0.69x.
+**Drivers:** ECL R12m + RPT impairment R5m compressed OpEx margin by ~2.1ppt. Normalised PAT margin ex-provisions ≈ 7.9%.
+**Rating:** Acceptable, albeit with margin pressure.
+
+### 5.4 Working Capital
+**Findings:** NWC R50m. Inventory Days 59, Receivables Days 58, Payables Days 59. CCC = 58 days.
+**Rating:** Acceptable — CCC typical for sector.
+
+### 5.5 Liquidity
+**Findings:** Cash R45m vs near-term claims (current portion LTD R45m + overdraft R35m) = R80m. Cash Ratio 0.20x. AFS-stated CFO R72m exceeds dividend + interest cash outflow.
+**Rating:** Acceptable, conditional on continued positive CFO. CFO / current debt service = 1.07x — slim buffer.
+
+### 5.6 Financial Performance
+**Findings:** Revenue R820m (+9.3%). GP 28.0%. EBITDA R110m. PAT R48m (FY22: R52m, −7.7%).
+**Drivers:** PAT compressed by R12m ECL + R5m RPT impairment. Underlying profitability stronger than headline.
+**Rating:** Acceptable with margin compression.
+
+### 5.7 Profitability
+**Findings:** GP 28.0%, EBIT 10.4%, EBITDA 13.4%, NPM 5.85%. ROE 15.5%; ROE on Adjusted TNW 17.8%; ROA 6.3%; ROCE 15.3%.
+**Rating:** Acceptable — mid-range returns for sector.
+
+### 5.8 Business Activity
+**Findings:** Total Asset Turnover 1.08x. OpEx/Turnover 17.7%.
+**Rating:** Acceptable.
+
+## 6. Key Ratio Summary (AFS FY23)
+| Ratio | Value | Adjusted | Source |
+|---|---|---|---|
+| D/E (external IBD only) | 0.79x | — | AFS |
+| Current Ratio | 1.22x | 1.30x | AFS / netted |
+| Net Profit Margin | 5.85% | ~7.9% ex-provisions | AFS |
+| Tangible Net Worth | R280m | R270m (ex-RPT receivable) | AFS |
+| CFO | R72m | — | AFS |
+| Material RPT exposure | R35m | 11% of equity | AFS |
+
+## Final Overall Assessment
+Acme Recyclers presents an **acceptable, albeit pressured** credit profile per FY23 audited results. Has the ability to meet near-term commitments, provided: (i) CFO remains at or above R72m, (ii) the RPT receivable is collected or formally subordinated, (iii) trade receivables ageing does not deteriorate further. Adopting the conservative regulatory lens (Section 4.10), the conclusion is **conditionally acceptable**, with RPT recoverability and CFO sustainability as binding dependencies.
+"
+"sa_metal_group_labelled","# Financial Health Diagnostic Analysis — Task Instructions
+
+## 1. Role and Objective
+Act as a senior credit/financial analyst preparing a financial health diagnostic report for a regulatory audience (e.g., SARB). Your objective is to analyze a company's financial health using all provided inputs — Annual Financial Statements (AFS), supplementary data extracts/model outputs, and any recent unaudited management accounts — and produce a structured, evidence-based assessment that integrates quantitative ratios with qualitative context.
+
+## 2. Inputs You Will Receive
+- Audited Annual Financial Statements (balance sheet, income statement, cash flow statement, statement of changes in equity, notes).
+- Supplementary data (ratio summaries, model outputs).
+- Recent unaudited management accounts (when provided).
+- Qualitative information (company background, industry, market conditions).
+
+If any input is missing, explicitly state this and explain the impact on the analysis.
+
+## 3. Data Source Hierarchy (apply throughout)
+1. **Audited AFS** — primary source for historical/audited periods. Prioritize AFS-stated figures for CFO (Cash Flow Statement), dividends paid (Statement of Changes in Equity/notes), and ratios over any summary/model output.
+2. **Unaudited management accounts** — required for the most current view; always label as ""unaudited"" and flag material deviations from audited trends.
+3. **Model outputs / pre-calculated ratios** — use in summary tables that are meant to reflect that source. For narrative analysis, independently recompute from AFS where possible. Flag and explain any material discrepancies.
+4. **Calculations (e.g., indirect-method CFO)** — only when no statement is available; state methodology and limitations.
+
+## 4. Cross-Cutting Analytical Principles (apply in every section)
+
+### 4.1 Understand the ""Why""
+Go beyond ratio calculation: link quantitative findings to operations, strategy, and market conditions.
+
+### 4.2 Context
+Interpret data relative to industry (service, manufacturing, non-profit, construction, tech, financial institution, etc.), size, operating model, and external events (COVID-19, regulatory changes, geopolitical/supply-chain shocks).
+
+### 4.3 Qualitative Overlay
+- **Company background & strategy:** founding, milestones, leadership/ownership changes (acquisitions, listings/delistings), strategic shifts, market position, competitive advantages.
+- **Key management shareholdings:** identify and note any significant direct shareholding by key managers as an indicator of aligned incentives and retention.
+- **Source preference:** prioritize official company documents (annual reports, ""About Us"") over generic web sources.
+- **Operational context:** key partnerships, certifications, BBBEE status (where relevant).
+- **Industry dynamics:** disruption, demand drivers, regulatory shifts, geopolitical impacts.
+
+### 4.4 Mandatory Related-Party Transaction (RPT) Analysis
+If material RPT balances or transactions exist:
+- Identify and quantify (absolute amounts and as % of total assets, equity, or current liabilities).
+- Assess nature, terms, arm's-length character, commercial rationale, recoverability, and contagion risk.
+- Compute an **Adjusted Tangible Net Worth** and **Adjusted Current Ratio / Leverage** excluding or reclassifying material/questionable RPT items; document each adjustment and rationale.
+- Apply professional skepticism where auditor commentary on recoverability is absent.
+- Explicitly discuss insolvency risk if a material RPT loan proved unrecoverable.
+- Summarize combined RPT exposure in the Key Ratio Summary if it represents a significant concentration of value or risk.
+
+### 4.5 Quality of Earnings
+- Do not take reported profits at face value.
+- Quantify the impact of non-recurring items, exceptional items, and volatile ""Other Income"" (e.g., grants, FX, bad debt reversals, gains on disposals, impairment reversals).
+- Discuss performance both including and excluding such items.
+- For material non-guaranteed income (e.g., government subsidies/grants), perform a sensitivity / ""what-if"" analysis showing impact on PAT and key margins.
+- **Define the PAT figure used** for any Net Profit Margin (NPM) or return metric:
+  - Specify whether ""PAT before NCI"" or ""PAT attributable to parent equity holders.""
+  - Default to PAT attributable to parent for shareholder-return metrics.
+  - Apply consistently across trend analyses; if different figures appear in different tables, reconcile and explain.
+- Distinguish one-off equity/cash-flow adjustments (e.g., prior-period tax) from current operating margin impacts.
+
+### 4.6 Cash Flow Analysis
+- Use AFS-stated CFO for audited periods (include even if model inputs omit it).
+- Incorporate management-account-derived CFO for recent unaudited periods, clearly labelled.
+- Calculate CFO (indirect method) only where no statement exists; disclose method and limitations.
+- Reconcile and explain material differences between AFS, management-account, and calculated CFO.
+- Integrate CFO into narrative on liquidity, working capital, debt service, and sustainability — not just as a standalone metric.
+
+### 4.7 Dividend Analysis
+- Source from Statement of Changes in Equity / AFS notes for audited periods; from management accounts for recent periods.
+- If inferred: Dividends ≈ PAT − (Δ Retained Earnings − other direct RE adjustments). State method and limitations.
+- Assess dividend payout vs. CFO, profitability (PAT attributable to parent), and liquidity. Flag large dividends paid from weak CFO or strained liquidity.
+- Comment on cumulative dividends vs. cumulative profits over multiple years where data allows.
+
+### 4.8 Ratio Consistency
+- Ensure internal consistency across narrative, tables, and appendices.
+- Use model-output ratios in tables designed to reflect them; recompute from AFS for the narrative.
+- Disclose and explain any material discrepancies (e.g., ""Model output D/E = X%; AFS-derived D/E = Z%, due to…"").
+- Flag apparent errors in summary inputs; prioritize AFS-corrected figures in the narrative.
+
+### 4.9 Nuanced, Substantiated Conclusions
+- Substantiate every rating (""strong,"" ""weak,"" ""acceptable,"" etc.) with specific quantitative and qualitative evidence.
+- Use nuanced phrasing for mixed situations (e.g., ""acceptable, albeit with margin pressure""; ""strong liquidity, though working-capital cycle has lengthened"").
+- State whether a rating is based purely on the P&L for the period or incorporates balance-sheet, cash-flow, and qualitative mitigants.
+- Identify the source period (AFS vs. management accounts) for any performance rating.
+- Reconcile qualitative claims (e.g., ""the company is cash generative"") with quantitative CFO; flag and explain contradictions.
+
+### 4.10 Conditional Final Conclusions (Regulatory Perspective)
+- Adopt a conservative, forward-looking risk lens.
+- Where solvency/liquidity depends on uncertain future events (sustained recovery in unaudited accounts, RPT recoverability, group support), make the conclusion explicitly conditional (e.g., ""has the ability to meet commitments, provided Y improvements seen in management accounts are realised in audited results and sustained"").
+- A single period of unaudited recovery does not override structural weaknesses without strong caveats.
+
+## 5. Required Diagnostic Sections
+Produce the analysis in the following numbered sections. For each section, apply the cross-cutting principles in Section 4, examine both AFS and management-account data (noting source and differences), and address: Composition/Position, Ratios, Changes Over Time, and Causes for Changes.
+
+### 5.1 Asset/Liability Structure & Financial Position
+- **Composition (%):** Non-current vs. current assets; key current-asset components (cash, marketable securities, trade receivables [with ageing/concentration and RPT receivables], inventory [obsolescence risk, WIP/contract assets], deposits, levies for associations); key non-current components (PPE incl. ROU, intangibles incl. goodwill, investment property, investments/loans to subs/related parties, derivatives, FVTPL assets; for FIs: loans & advances, investment securities, deposits from customers); current vs. non-current liabilities and equity; current-liability components (trade payables, accruals, tax, contract liabilities, current portion LTD, put-option liabilities); debt breakdown (interest-bearing vs. not; shareholder/RPT loans vs. external; subordination; arm's-length terms; net of transaction costs; secured vs. unsecured; instalment sale, vehicle/trade finance, finance leases, factoring; current vs. non-current).
+- **Position:** absolute values of total assets, NCA, CA, total liabilities, NCL (incl. lease liabilities), CL, total debt (incl. overdrafts); note low/no external debt; branch capital for foreign-branch entities.
+- **Ratios:** D/E (with and without RPT/shareholder loans, and after justified intercompany netting), Gearing, Total Assets/Total Liabilities, Current Ratio (and adjusted CR), Quick Ratio (and adjusted), Net Debt (and adjusted), regulatory capital ratios where relevant.
+- **Distinguish** related-party ""loans"" from equity investments (e.g., Investment in Associate/Subsidiary).
+- **Causes:** debt vs. asset purchases / working capital / loss funding / refinancing; equity changes from profits, issues, dividends, losses; cumulative impact of sustained dividends; revaluations.
+
+### 5.2 Net Worth (Equity)
+- **Position:** Total Equity (flag negative); accumulated losses; equity vs. total assets/debt/operations.
+- **Changes:** absolute and % change.
+- **Causes:** PAT impact; dividends (AFS-sourced, or inferred with method shown); cumulative dividends vs. cumulative profits; share capital injections/buybacks; loss erosion; asset write-offs; prior-year adjustments; reserve movements (common control, NCI transactions, share-based payments).
+- **Quality:** identify intangibles; compute **Tangible Net Worth** and **Adjusted Tangible Net Worth** (further deducting material/questionable RPT receivables); discuss key items deducted; flag dependence on deferred tax assets or RPT recoverability; note industry-appropriate equity bases (e.g., service firms); NPO reserves (designated/restricted funds).
+
+### 5.3 Financial Sustainability
+- **Ratios:** Net Profit Margin (specify PAT basis); D/E (variants); Gearing; Interest Coverage; Book Equity/Total Liabilities; Credit Loss Ratio (FIs); regulatory capital adherence.
+- **Trends:** earnings (Net Profit, EBIT, EBITDA) from core operations; (adjusted tangible) equity base; leverage and coverage.
+- **Causes:** cost-structure shifts (BEE costs, ECL provisions, R&D); exceptional/non-recurring items; ""Other Income"" quality; debt-funded acquisitions; finance-cost trends; deferred tax; cumulative negative CFO; shareholder-support reliance (assess terms); IFRS 16 impact; external context (COVID-19, market conditions).
+
+### 5.4 Working Capital
+- **Position:** Net Working Capital; cash, trade receivables, inventory, trade payables.
+- **Ratios:** Current Ratio, Quick Ratio, Cash Conversion Cycle (Inventory Days + Receivables Days − Payables Days), with each component calculated using averages where appropriate.
+- **Trends and causes:** sales/purchasing/credit policy changes; inventory management; seasonality; consistency across periods; investigate counterintuitive movements.
+
+### 5.5 Liquidity
+- **Position:** cash & equivalents, marketable securities vs. short-term obligations.
+- **Ratios:** Current, Quick, Cash Ratio.
+- **Coverage:** committed undrawn facilities/overdrafts.
+- **Trends & causes:** operational cash generation (CFO source-tagged); investing flows (capex, disposals); financing flows (debt, equity, dividends); unusual flows.
+- **Reconcile qualitative claims** about cash generation with CFO; flag and investigate contradictions.
+
+### 5.6 Financial Performance (Results Overview)
+- **Trends (absolute and %):** Revenue (drivers: projects, client wins/losses, mix shifts, tender contracts; distinguish core vs. dividends/management fees/rental/FV adjustments/levies; AUM for asset managers); COGS (incl. subcontractor costs); Gross Profit; OpEx (highlight largest contributing sub-categories: BEE, ECL, impairments of RPT/subs, R&D, project costs, related-party service fees); OpEx/Turnover; EBIT; EBITDA; PAT (state pre- or post-NCI basis consistently); profit/loss from discontinued operations; income before exceptional items.
+- **Causes:** differential growth rates and their margin impacts; interest/tax effects; nature/recurrence of Other Income; exceptional items (gain/loss on disposal, impairments, acquisition costs, lease termination gains/losses) — analyse performance with and without; impairments of financial assets/RPT receivables; FX impacts; revenue-recognition methods (e.g., percentage-of-completion, tender contracts).
+
+### 5.7 Profitability
+- **Margins:** Gross, Operating (EBIT), EBITDA, Net (assess sustainability vs. Other Income/exceptional; reaffirm PAT basis).
+- **Returns:** ROE (and ROE on adjusted tangible NW), ROA, ROCE/ROIC — use average balances where available.
+- **Trends & causes:** expense/revenue ratio shifts; sub-category drivers where data permits; asset/capital base changes vs. profit; industry/operational context; Other Income drivers.
+
+### 5.8 Business Activity (Turnover Ratios)
+- **Growth:** revenue growth rate; client/project drivers; industry context (post-COVID, safety demand, supply-chain disruption, regional conflicts); note year-end timing when discussing external events for comparability.
+- **Ratios:** Total Asset Turnover (Revenue/Total Assets); OpEx/Turnover.
+- **Causes:** revenue vs. asset-base correlation (incl. WIP/contract assets); external drivers; COGS-vs-revenue percentage changes; efficiency vs. margin pressure.
+
+## 6. Summary / Key Ratio Section
+Include a Key Ratio Summary that:
+- Uses pre-calculated input ratios where the table is meant to reflect them (note any flagged corrections).
+- **Quantifies material balance-sheet exposures** critical to the risk profile (e.g., ""Intangibles + net RPT investments/receivables = X% of total equity per latest [AFS/management accounts]""), linking back to the detailed sections.
+- Specifies whether figures are from AFS or unaudited management accounts.
+
+## 7. Output Format
+Structure the report with the numbered sections in Section 5 (and the Summary in Section 6). For each section:
+1. **Findings** — quantitative results (with source tag: AFS/management accounts/calculated).
+2. **Drivers & Context** — qualitative explanation and industry/strategic linkage.
+3. **Adjustments** — any reclassifications/nettings/adjusted ratios with documented rationale.
+4. **Rating** — nuanced rating with explicit substantiation, mitigants, and caveats.
+
+Conclude with a **Final Overall Assessment** that:
+- Is conditional where appropriate.
+- Clearly states dependencies, limitations, and the unaudited status of any management-account-derived inputs.
+- Adopts the conservative regulatory perspective described in Section 4.10.
+
+## 8. Style Requirements
+- Be precise, source-tagged, and internally consistent.
+- Avoid stark binary ratings where mitigants/pressures justify nuance.
+- Document every analytical adjustment with rationale.
+- Highlight, do not hide, discrepancies and data-quality concerns.
+---
+## Company Data (FY23, audited)
+
+**Company:** SA Metal Group (Pty) Ltd — South Africa, integrated metals recycling, founded 1919, family-controlled, BBBEE Level 2.
+
+**Balance Sheet (Rm):**
+- Non-current assets: 1,560 (PPE 1,380 incl. ROU 95; Intangibles 95 incl. goodwill 70; Investments in subsidiaries 85)
+- Current assets: 840 (Cash 120; Trade receivables 390 [top 10 clients 38%]; Inventory 310; Other 20)
+- Total assets: 2,400
+
+- Equity: 900 (Share capital 100; Retained earnings 760; Other reserves 40)
+- Non-current liabilities: 720 (Term loans 540; Lease liabilities 95; Deferred tax 85)
+- Current liabilities: 780 (Trade payables 380; Accruals 110; Tax 35; Current portion LTD 145; Overdraft 110)
+
+**Income Statement (Rm):**
+- Revenue: 3,100 (FY22: 2,810, +10.3%)
+- COGS: 2,355; Gross profit: 745 (24.0% margin)
+- OpEx: 425 (no exceptional items disclosed)
+- EBITDA: 360; D&A: 70; EBIT: 290
+- Net finance costs: 95; PBT: 195; Tax: 55; PAT: 140
+
+**Cash Flow (AFS-stated):**
+- CFO: 210; CFI: -180 (capex 175, disposals 5 inflow, subsidiary acquisition -10); CFF: -65 (debt repayment 45, dividends paid 25, new debt drawn 5)
+- Net change in cash: -35
+
+**Notes:**
+- Dividends FY23: R25m. Cumulative 3yr dividends: R70m vs cumulative PAT R380m (18% payout).
+- No material RPT receivables flagged.
+- Goodwill R70m from FY21 acquisition of regional yards.
+","## Financial Health Diagnostic — SA Metal Group (Pty) Ltd
+
+### 5.1 Asset/Liability Structure & Financial Position
+**Findings (AFS FY23):** Total assets R2,400m. Composition: Non-current 65%, current 35%. Key non-current: PPE R1,380m (57.5% of TA, incl. R95m ROU); Intangibles R95m (4.0%, R70m goodwill); Investments in subsidiaries R85m. Current assets: cash R120m (5.0% of TA), trade receivables R390m (top 10 clients 38%, ageing not disclosed), inventory R310m. External interest-bearing debt R795m (term loans R540m + current portion R145m + overdraft R110m); no material RPT receivables flagged. D/E (external IBD / equity) = 0.88x. Total Liab/Equity = 1.67x. Current ratio: 1.08x; Quick ratio: 0.68x. Cash Ratio: 0.15x.
+**Drivers & Context:** Capital-intensive footprint typical for an integrated metals recycler. Family-controlled BBBEE Level 2 entity with 100+ years of operating history provides reputational and counterparty depth. Front-loaded debt maturity (R145m current portion + R110m overdraft) creates near-term refinancing focus.
+**Adjustments:** Adjusted Tangible Net Worth = R900m − R70m goodwill = **R830m**. No RPT adjustment required.
+**Rating:** Acceptable — manageable external leverage at 0.88x with substantial tangible net worth; current liquidity is the weakest line item but supported by CFO generation.
+
+### 5.2 Net Worth (Equity)
+**Findings:** Equity R900m. TNW R805m; intangibles only 10.6% of equity. No accumulated losses.
+**Drivers:** PAT R140m − dividends R25m = +R115m retained. 3-year cumulative payout 18% — conservative; equity accumulation is the structural feature.
+**Rating:** Strong — substantial, tangible, conservatively retained equity base.
+
+### 5.3 Financial Sustainability
+**Findings:** NPM (PAT) 4.52%. EBITDA margin 11.6%. EBIT margin 9.35%. Interest coverage = 290/95 = 3.05x. Book Equity/Total Liabilities = 900/1,500 = 0.60x.
+**Drivers:** No exceptional items disclosed → reported earnings are clean. Net finance cost R95m (3.06% of revenue) is meaningful given R795m external IBD.
+**Rating:** Acceptable. Margins are thin for a capital-intensive operation, but earnings quality is clean and interest coverage above 3x provides headroom.
+
+### 5.4 Working Capital
+**Findings:** NWC R60m. Inventory Days = (310/2,355)×365 = 48. Receivables Days = (390/3,100)×365 = 46. Payables Days = (380/2,355)×365 = 59. CCC = 48 + 46 − 59 = 35 days.
+**Drivers:** Negative-CCC tailwind from trade payables ≥ inventory days. Efficient working-capital management for a commodity-recycling business.
+**Rating:** Strong — CCC ~35 days is operationally efficient and reflects supplier-credit leverage.
+
+### 5.5 Liquidity
+**Findings:** Cash R120m vs near-term claims (current portion LTD R145m + overdraft R110m + interest R95m annualised) = R255m+. Cash Ratio 0.15x. AFS-stated CFO R210m comfortably exceeds R95m interest + R25m dividends + R45m debt repayment.
+**Drivers:** Static liquidity ratios are thin but CFO conversion is robust (CFO/PAT = 1.5x). Current portion LTD will require either refinancing or partial repayment from cash.
+**Rating:** Acceptable, conditional on continued strong CFO. CFO / total current debt service (R145+R95) = 0.88x in absolute terms, but with cash + new debt drawn rolling the maturity, this is workable.
+
+### 5.6 Financial Performance
+**Findings:** Revenue R3,100m (+10.3% YoY). GP 24.0%. EBITDA R360m. EBIT R290m. PAT R140m. No exceptional items flagged.
+**Drivers:** Top-line growth +10.3% outpacing COGS growth implies stable unit margins. Quality of earnings is high — no impairments, no non-recurring ""other income"" dependency.
+**Rating:** Acceptable, trending positive on revenue growth with clean earnings quality.
+
+### 5.7 Profitability
+**Findings:** GP 24.0%, EBIT 9.35%, EBITDA 11.6%, NPM 4.52%. ROE = 140/900 = 15.6%; ROE on Adjusted TNW = 140/830 = 16.9%; ROA = 140/2,400 = 5.83%; ROCE = EBIT/(equity+IBD) = 290/(900+795) = 17.1%.
+**Drivers:** ROCE of 17.1% materially exceeds typical cost of debt (interest cost ÷ IBD ≈ 95/795 = 11.9%), indicating positive economic value-add from capital deployment.
+**Rating:** Acceptable — thin headline NPM but solid ROCE/ROE; capital intensity is being productively deployed.
+
+### 5.8 Business Activity
+**Findings:** Total Asset Turnover = 3,100/2,400 = 1.29x. OpEx/Turnover = 13.7%.
+**Drivers:** Asset turnover above 1x is healthy for a PPE-heavy recycler; the post-COVID and Eskom/logistics environment in South Africa has nonetheless held up.
+**Rating:** Acceptable — productivity is sector-appropriate.
+
+## 6. Key Ratio Summary (AFS FY23)
+| Ratio | Value | Adjusted | Source |
+|---|---|---|---|
+| D/E (external IBD only) | 0.88x | — | AFS |
+| Current Ratio | 1.08x | — | AFS |
+| Quick Ratio | 0.68x | — | AFS |
+| Net Profit Margin | 4.52% | — | AFS |
+| Tangible Net Worth | R805m | R830m (ex-goodwill only) | AFS |
+| CFO | R210m | — | AFS |
+| ROCE | 17.1% | — | AFS |
+| Intangibles / Equity | 10.6% | — | AFS |
+
+## Final Overall Assessment
+SA Metal Group presents an **acceptable** credit profile per FY23 audited results, with **strong tangible net worth** and a **clean quality of earnings** as the supporting pillars. The company has the ability to meet its commitments, provided: (i) CFO is sustained at or above the FY23 level of R210m to support the R145m current portion of LTD and R110m overdraft, (ii) commodity-price exposure on inventory (R310m, 13% of TA) does not materially compress gross margin, and (iii) refinancing of the front-loaded debt maturity profile is concluded on terms not materially worse than current. Adopting the conservative regulatory lens (Section 4.10), the conclusion is **acceptable** outright, with thin near-term liquidity and revenue concentration in commodity cycles as the principal watch items. The 100+ year operating history, conservative dividend payout (18%), and absence of material RPT exposure differentiate this profile from sector peers.
+"
